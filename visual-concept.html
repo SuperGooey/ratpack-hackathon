@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scurry — Rat Pack Live Map (Daytime)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fbf3e2;
+    --paper-2:#f4e8d0;
+    --ground:#ece0c6;
+    --surface:#ffffff;
+    --surface-2:#fff8ec;
+    --line:#e7d8ba;
+    --line-soft:#efe3cb;
+    --cheese:#ffc21f;
+    --cheese-deep:#e89e00;
+    --pizza:#ff5436;
+    --sewer:#3fae4e;
+    --danger:#e23b2f;
+    --pigeon:#3f8fb2;
+    --ink:#2c2318;
+    --muted:#8c7c64;
+    --muted-2:#b3a489;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    background:
+      radial-gradient(120% 80% at 15% -10%, #fff6e3 0%, transparent 55%),
+      radial-gradient(120% 90% at 100% 110%, #ffe9d6 0%, transparent 50%),
+      #f6ead2;
+    font-family:"Bricolage Grotesque",system-ui,sans-serif;
+    color:var(--ink);
+    display:grid;place-items:center;min-height:100%;padding:26px 14px;
+  }
+  /* ---------- phone shell ---------- */
+  .phone{
+    width:392px;max-width:100%;
+    height:812px;max-height:calc(100dvh - 40px);
+    background:var(--paper);
+    border-radius:42px;position:relative;overflow:hidden;
+    box-shadow:0 40px 90px -22px rgba(120,90,40,.4), 0 0 0 10px #fff, 0 0 0 12px #e7d8ba;
+    isolation:isolate;
+  }
+  .phone::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:55;
+    box-shadow:inset 0 0 80px 10px rgba(255,240,210,.5);border-radius:42px;
+  }
+
+  /* ---------- status + header ---------- */
+  .statusbar{
+    position:absolute;top:0;left:0;right:0;height:46px;z-index:40;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 26px 0;font:700 13px "Space Mono",monospace;color:var(--ink);
+  }
+  .statusbar .dots{display:flex;gap:4px;align-items:center}
+
+  header{position:absolute;top:46px;left:0;right:0;z-index:40;padding:8px 16px 0}
+  .topline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:9px}
+  .logo{
+    width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+    background:linear-gradient(150deg,var(--cheese),var(--cheese-deep));
+    box-shadow:0 6px 16px -4px rgba(232,158,0,.55), inset 0 1px 0 rgba(255,255,255,.6);
+    font-size:20px;transform:rotate(-6deg);
+  }
+  .brand h1{margin:0;font-size:25px;font-weight:800;letter-spacing:-.04em;line-height:1}
+  .brand .sub{font:400 10px "Space Mono",monospace;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+  .live{
+    display:flex;align-items:center;gap:6px;font:700 10px "Space Mono",monospace;
+    color:#d8362b;background:rgba(226,59,47,.1);border:1px solid rgba(226,59,47,.25);
+    padding:6px 10px;border-radius:30px;letter-spacing:.1em;
+  }
+  .live .blip{width:7px;height:7px;border-radius:50%;background:#e23b2f;box-shadow:0 0 8px rgba(226,59,47,.6);animation:blip 1.4s infinite}
+  @keyframes blip{0%,100%{opacity:1}50%{opacity:.25}}
+  .iconbtn{
+    width:38px;height:38px;border-radius:12px;border:1px solid var(--line);
+    background:rgba(255,255,255,.8);backdrop-filter:blur(6px);color:var(--ink);
+    display:grid;place-items:center;font-size:16px;cursor:pointer;
+    box-shadow:0 3px 8px rgba(150,120,60,.12);
+  }
+
+  .search{
+    margin-top:11px;display:flex;align-items:center;gap:9px;
+    background:rgba(255,255,255,.85);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:14px;padding:9px 13px;
+    font:400 13.5px "Bricolage Grotesque";color:var(--muted);
+    box-shadow:0 3px 10px rgba(150,120,60,.1);
+  }
+  .search .sniff{font-size:15px}
+
+  .chips{margin-top:10px;display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:0 0 auto;display:flex;align-items:center;gap:6px;cursor:pointer;
+    padding:8px 13px;border-radius:30px;border:1px solid var(--line);
+    background:rgba(255,255,255,.85);backdrop-filter:blur(8px);
+    font:600 13px "Bricolage Grotesque";color:var(--muted);white-space:nowrap;
+    transition:.18s ease;user-select:none;box-shadow:0 2px 6px rgba(150,120,60,.08);
+  }
+  .chip .em{font-size:14px}
+  .chip[data-on="1"]{color:#2c2318;border-color:transparent;box-shadow:0 4px 12px -3px rgba(0,0,0,.18)}
+  .chip[data-on="1"][data-c="cheese"]{background:var(--cheese)}
+  .chip[data-on="1"][data-c="danger"]{background:var(--danger);color:#fff}
+  .chip[data-on="1"][data-c="pack"]{background:var(--ink);color:#fff7e9}
+  .chip[data-on="1"][data-c="heat"]{background:linear-gradient(90deg,var(--cheese),var(--pizza));color:#2c2318}
+  .chip[data-on="1"][data-c="transit"]{background:var(--pigeon);color:#fff}
+
+  /* ---------- map ---------- */
+  .mapwrap{position:absolute;inset:0;z-index:10}
+  #map{position:absolute;inset:0}
+  #map svg.base{position:absolute;inset:0;width:100%;height:100%}
+  .layer{position:absolute;inset:0}
+  .pin{position:absolute;transform:translate(-50%,-50%);transition:transform .15s;animation:pop .5s cubic-bezier(.2,1.4,.4,1) backwards}
+  @keyframes pop{from{transform:translate(-50%,-50%) scale(0);opacity:0}}
+  .pin:active{transform:translate(-50%,-50%) scale(.9)}
+
+  .poi{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;font-size:15px;
+       background:#fff;border:1px solid var(--line);box-shadow:0 4px 10px rgba(150,120,60,.22)}
+  .poi.hq{background:var(--cheese);border-color:var(--cheese-deep);box-shadow:0 4px 14px -2px rgba(232,158,0,.55)}
+  .poi.pizza{border-color:rgba(255,84,54,.5)}
+  .poi.transit{border-color:rgba(63,143,178,.5)}
+
+  .threat{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-size:14px;
+    background:#fff;border:1px solid rgba(226,59,47,.5);box-shadow:0 0 0 4px rgba(226,59,47,.1), 0 3px 8px rgba(150,120,60,.18)}
+  .threat.pigeon{border-color:rgba(63,143,178,.55);box-shadow:0 0 0 4px rgba(63,143,178,.12), 0 3px 8px rgba(150,120,60,.18)}
+
+  .heat{position:absolute;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;
+    background:radial-gradient(circle, rgba(255,160,40,.55) 0%, rgba(255,84,54,.32) 45%, transparent 70%);
+    mix-blend-mode:multiply;filter:blur(3px);animation:breathe 5s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.7}50%{opacity:.95}}
+
+  .npc{cursor:pointer}
+  .npc .av{
+    width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:22px;
+    background:radial-gradient(circle at 35% 30%, #b59d84, #7c6650);
+    border:3px solid var(--cheese);box-shadow:0 6px 16px -3px rgba(150,120,60,.4);
+    animation:bob 3.2s ease-in-out infinite;
+  }
+  .npc[data-vibe="heat"] .av{border-color:var(--pizza)}
+  .npc[data-vibe="threat"] .av{border-color:var(--danger)}
+  .npc .dot{position:absolute;right:0;bottom:6px;width:13px;height:13px;border-radius:50%;
+    border:2px solid var(--paper);background:var(--sewer)}
+  .npc[data-vibe="heat"] .dot{background:var(--cheese)}
+  .npc[data-vibe="threat"] .dot{background:var(--danger)}
+  .npc .tag{
+    position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+    font:700 9px "Space Mono",monospace;color:#2c2318;background:var(--cheese);
+    padding:2px 6px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 6px rgba(150,120,60,.3)}
+  .npc[data-vibe="heat"] .tag{background:var(--pizza);color:#fff}
+  .npc[data-vibe="threat"] .tag{background:var(--danger);color:#fff}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+  .you{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%);z-index:14}
+  .you .ring{width:58px;height:58px;border-radius:50%;padding:3px;
+    background:conic-gradient(from 0deg,var(--cheese),var(--pizza),var(--sewer),var(--cheese));animation:spin 6s linear infinite}
+  .you .inner{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;font-size:26px;
+    background:radial-gradient(circle at 35% 30%,#c2ab92,#8a7460);border:3px solid var(--paper)}
+  .you .me{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+    font:700 9px "Space Mono",monospace;background:var(--ink);color:var(--paper);padding:2px 7px;border-radius:20px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  #map[data-feast="0"] .lyr-feast{display:none}
+  #map[data-heat="0"] .lyr-heatglow{display:none}
+  #map[data-danger="0"] .lyr-threat{display:none}
+  #map[data-pack="0"] .lyr-pack{display:none}
+  #map[data-transit="0"] .lyr-transit{display:none}
+
+  .nearby{
+    position:absolute;left:50%;bottom:150px;transform:translateX(-50%);z-index:30;
+    display:flex;align-items:center;gap:9px;padding:8px 8px 8px 14px;border-radius:40px;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border:1px solid var(--line);
+    box-shadow:0 14px 30px -10px rgba(150,120,60,.4);font:600 12.5px "Bricolage Grotesque";
+    animation:floatup .6s .3s backwards;
+  }
+  @keyframes floatup{from{opacity:0;transform:translate(-50%,14px)}}
+  .nearby .stack{display:flex}
+  .nearby .stack span{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;
+    background:radial-gradient(circle at 35% 30%,#b59d84,#7c6650);border:2px solid var(--cheese);margin-left:-9px}
+  .nearby .stack span:first-child{margin-left:0}
+  .nearby b{color:var(--cheese-deep)}
+
+  .legend{
+    position:absolute;right:14px;bottom:210px;z-index:30;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border:1px solid var(--line);
+    border-radius:14px;padding:11px 12px;font:600 11px "Bricolage Grotesque";
+    box-shadow:0 8px 20px -8px rgba(150,120,60,.35);
+    opacity:0;transform:translateY(8px);pointer-events:none;transition:.25s;
+  }
+  #map[data-heat="1"] ~ .legend{opacity:1;transform:none}
+  .legend .ttl{font:700 9px "Space Mono",monospace;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:7px}
+  .legend .bar{height:8px;width:130px;border-radius:6px;background:linear-gradient(90deg,#e7d8ba,var(--cheese),var(--pizza))}
+  .legend .ends{display:flex;justify-content:space-between;color:var(--muted);font-size:9px;margin-top:4px}
+
+  .nav{
+    position:absolute;left:0;right:0;bottom:0;z-index:45;height:88px;
+    padding:12px 18px 26px;display:flex;justify-content:space-between;align-items:center;
+    background:linear-gradient(0deg,var(--paper) 55%,transparent);
+  }
+  .nav button{background:none;border:none;color:var(--muted-2);font:600 9px "Bricolage Grotesque";
+    display:grid;justify-items:center;gap:4px;cursor:pointer}
+  .nav button .ic{font-size:20px;filter:grayscale(.4);opacity:.7}
+  .nav button.active{color:var(--cheese-deep)}
+  .nav button.active .ic{filter:none;opacity:1}
+  .nav .center{width:54px;height:54px;border-radius:18px;display:grid;place-items:center;
+    background:linear-gradient(150deg,var(--cheese),var(--cheese-deep));color:#2c2318;font-size:24px;
+    box-shadow:0 8px 22px -6px rgba(232,158,0,.55);transform:translateY(-12px)}
+
+  .scrim{position:absolute;inset:0;z-index:48;background:rgba(60,45,20,.35);opacity:0;pointer-events:none;transition:.25s}
+  .scrim.show{opacity:1;pointer-events:auto}
+  .sheet{
+    position:absolute;left:0;right:0;bottom:0;z-index:49;
+    background:linear-gradient(180deg,#ffffff,var(--surface-2));
+    border-radius:26px 26px 0 0;border:1px solid var(--line);border-bottom:none;
+    padding:10px 18px 26px;transform:translateY(110%);transition:transform .32s cubic-bezier(.2,.9,.3,1);
+    box-shadow:0 -20px 50px -10px rgba(150,120,60,.4);
+  }
+  .sheet.show{transform:none}
+  .grab{width:38px;height:5px;border-radius:6px;background:var(--line);margin:4px auto 14px}
+  .sheet .head{display:flex;align-items:center;gap:13px}
+  .sheet .face{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:28px;
+    background:radial-gradient(circle at 35% 30%,#b59d84,#7c6650);border:2px solid var(--cheese);flex:0 0 auto}
+  .sheet .who{flex:1;min-width:0}
+  .sheet .who h2{margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em}
+  .sheet .who .loc{font:400 12px "Bricolage Grotesque";color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:4px}
+  .sheet .vibe{font:700 9px "Space Mono",monospace;padding:4px 8px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase}
+  .vibe.feast{background:rgba(63,174,78,.14);color:var(--sewer);border:1px solid rgba(63,174,78,.35)}
+  .vibe.heat{background:rgba(232,158,0,.16);color:var(--cheese-deep);border:1px solid rgba(232,158,0,.35)}
+  .vibe.threat{background:rgba(226,59,47,.13);color:var(--danger);border:1px solid rgba(226,59,47,.35)}
+
+  .ratebar{display:flex;align-items:center;justify-content:space-between;margin:16px 0 4px}
+  .ratebar .rli{display:flex;align-items:baseline;gap:6px}
+  .ratebar .rli .num{font:800 30px "Space Mono",monospace;letter-spacing:-.03em;color:var(--cheese-deep)}
+  .ratebar .rli .of{font:400 12px "Space Mono",monospace;color:var(--muted)}
+  .ratebar .cheese{font-size:13px;letter-spacing:1px}
+  .ratebar .lbl{font:700 9px "Space Mono",monospace;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+
+  .quote{margin:12px 0 16px;font-size:15px;line-height:1.5;font-style:italic;color:var(--ink)}
+  .quote .q{color:var(--cheese-deep);font-style:normal;font-weight:800}
+
+  .breakdown{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+  .fact{display:flex;align-items:center;gap:6px;font:600 11.5px "Bricolage Grotesque";
+    padding:7px 10px;border-radius:11px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
+  .fact .v{font-family:"Space Mono",monospace;font-size:10.5px}
+  .fact.good .v{color:var(--sewer)}
+  .fact.warn .v{color:var(--cheese-deep)}
+  .fact.bad .v{color:var(--danger)}
+
+  .acts{display:flex;gap:10px}
+  .acts button{flex:1;border:none;border-radius:14px;padding:14px;font:800 14px "Bricolage Grotesque";cursor:pointer}
+  .acts .go{background:linear-gradient(150deg,var(--cheese),var(--cheese-deep));color:#2c2318;box-shadow:0 8px 20px -6px rgba(232,158,0,.5)}
+  .acts .wave{background:#fff;color:var(--ink);border:1px solid var(--line)!important}
+
+  .hint{position:absolute;left:50%;bottom:108px;transform:translateX(-50%);z-index:30;
+    font:600 11px "Bricolage Grotesque";color:var(--muted);background:rgba(255,255,255,.85);
+    padding:6px 12px;border-radius:20px;border:1px solid var(--line);box-shadow:0 4px 10px rgba(150,120,60,.2);animation:floatup .6s .5s backwards}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <div class="dots">
+      <span style="font-size:11px">🐀 LTE</span>
+      <svg width="22" height="12" viewBox="0 0 24 12"><rect x="0" y="0" width="20" height="12" rx="3" fill="none" stroke="#2c2318" stroke-opacity=".55"/><rect x="2" y="2" width="14" height="8" rx="1.5" fill="#2c2318"/><rect x="21" y="4" width="2" height="4" rx="1" fill="#2c2318" fill-opacity=".5"/></svg>
+    </div>
+  </div>
+
+  <header>
+    <div class="topline">
+      <div class="brand">
+        <div class="logo">🐀</div>
+        <div>
+          <h1>Scurry</h1>
+          <div class="sub">rat pack · live map</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="live"><span class="blip"></span>LIVE</div>
+        <div class="iconbtn">⚙️</div>
+      </div>
+    </div>
+
+    <div class="search"><span class="sniff">🔎</span> sniff out a block…</div>
+
+    <div class="chips" id="chips">
+      <div class="chip" data-key="feast" data-c="cheese" data-on="1"><span class="em">🍕</span>Feast Mode</div>
+      <div class="chip" data-key="danger" data-c="danger" data-on="1"><span class="em">☠️</span>Heat</div>
+      <div class="chip" data-key="pack" data-c="pack" data-on="1"><span class="em">🐀</span>The Pack</div>
+      <div class="chip" data-key="heat" data-c="heat" data-on="1"><span class="em">🌡️</span>RLI Heat</div>
+      <div class="chip" data-key="transit" data-c="transit" data-on="0"><span class="em">🚇</span>Transit</div>
+    </div>
+  </header>
+
+  <div class="mapwrap">
+    <div id="map" data-feast="1" data-danger="1" data-pack="1" data-heat="1" data-transit="0">
+
+      <svg class="base" viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="riv" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#bfe2ee"/><stop offset="1" stop-color="#9fd0e0"/>
+          </linearGradient>
+        </defs>
+        <rect width="400" height="700" fill="#ece0c6"/>
+        <!-- river -->
+        <path d="M400,430 C360,470 380,540 330,580 C300,610 360,660 400,650 L400,700 L400,700 Z" fill="url(#riv)"/>
+        <path d="M400,430 C360,470 380,540 330,580 C300,610 360,660 400,650" fill="none" stroke="#7fbdd2" stroke-width="2" opacity=".7"/>
+        <!-- park -->
+        <rect x="150" y="232" width="120" height="120" rx="10" fill="#cfe6a6"/>
+        <rect x="150" y="232" width="120" height="120" rx="10" fill="none" stroke="#a7cf78" stroke-width="1.5"/>
+        <path d="M150,292 H270 M210,232 V352" stroke="#a7cf78" stroke-width="1" opacity=".8"/>
+        <circle cx="180" cy="262" r="6" fill="#8fbf63"/><circle cx="240" cy="320" r="7" fill="#8fbf63"/>
+        <!-- streets: wide white -->
+        <g stroke="#fdfaf2" stroke-width="8">
+          <line x1="0" y1="120" x2="400" y2="120"/><line x1="0" y1="205" x2="400" y2="205"/>
+          <line x1="0" y1="385" x2="400" y2="385"/><line x1="0" y1="470" x2="320" y2="470"/>
+          <line x1="0" y1="555" x2="300" y2="555"/>
+          <line x1="75" y1="90" x2="75" y2="640"/><line x1="150" y1="90" x2="150" y2="640"/>
+          <line x1="270" y1="90" x2="270" y2="600"/><line x1="335" y1="90" x2="335" y2="470"/>
+        </g>
+        <g stroke="#e3d4b4" stroke-width="1" opacity=".8">
+          <line x1="0" y1="120" x2="400" y2="120"/><line x1="0" y1="205" x2="400" y2="205"/>
+          <line x1="0" y1="385" x2="400" y2="385"/>
+          <line x1="75" y1="90" x2="75" y2="640"/><line x1="270" y1="90" x2="270" y2="600"/>
+        </g>
+      </svg>
+
+      <div class="layer lyr-transit">
+        <svg viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
+          <path d="M40,90 L40,205 L150,205 L150,385 L270,385 L270,600" fill="none" stroke="#e89e00" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+          <path d="M335,90 L335,470 L75,470 L75,640" fill="none" stroke="#3fae4e" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+        </svg>
+      </div>
+
+      <div class="layer lyr-heatglow">
+        <div class="heat" style="left:42%;top:31%;width:150px;height:150px"></div>
+        <div class="heat" style="left:64%;top:56%;width:130px;height:130px;animation-delay:1s"></div>
+        <div class="heat" style="left:24%;top:67%;width:110px;height:110px;animation-delay:2s"></div>
+      </div>
+
+      <div class="layer lyr-feast">
+        <div class="pin poi hq" style="left:43%;top:30%;animation-delay:.05s">🏪</div>
+        <div class="pin poi pizza" style="left:55%;top:24%;animation-delay:.1s">🍕</div>
+        <div class="pin poi pizza" style="left:38%;top:38%;animation-delay:.15s">🍕</div>
+        <div class="pin poi pizza" style="left:66%;top:54%;animation-delay:.2s">🍕</div>
+        <div class="pin poi pizza" style="left:22%;top:64%;animation-delay:.25s">🍕</div>
+        <div class="pin poi" style="left:30%;top:50%;animation-delay:.3s">🥯</div>
+        <div class="pin poi" style="left:72%;top:38%;animation-delay:.35s">🗑️</div>
+        <div class="pin poi" style="left:18%;top:32%;animation-delay:.4s">🗑️</div>
+      </div>
+
+      <div class="layer lyr-transit">
+        <div class="pin poi transit" style="left:37%;top:30%">🚇</div>
+        <div class="pin poi transit" style="left:67%;top:56%">🚇</div>
+        <div class="pin poi transit" style="left:18%;top:67%">🚇</div>
+      </div>
+
+      <div class="layer lyr-threat">
+        <div class="pin threat" style="left:58%;top:68%;animation-delay:.2s">☠️</div>
+        <div class="pin threat" style="left:33%;top:74%;animation-delay:.25s">🐈</div>
+        <div class="pin threat pigeon" style="left:78%;top:30%;animation-delay:.3s">🕊️</div>
+        <div class="pin threat pigeon" style="left:74%;top:46%;animation-delay:.35s">🕊️</div>
+      </div>
+
+      <div class="layer lyr-pack">
+        <div class="pin npc" data-id="prov" data-vibe="feast" style="left:47%;top:33%;animation-delay:.3s">
+          <div class="av">🐀<div class="dot"></div></div><div class="tag">Provolone · 4.8🧀</div>
+        </div>
+        <div class="pin npc" data-id="mama" data-vibe="feast" style="left:40%;top:42%;animation-delay:.4s">
+          <div class="av">🐀<div class="dot"></div></div><div class="tag">Mama Gnaw · 4.9🧀</div>
+        </div>
+        <div class="pin npc" data-id="tony" data-vibe="feast" style="left:64%;top:52%;animation-delay:.5s">
+          <div class="av">🐀<div class="dot"></div></div><div class="tag">Tony 2-Tails · 4.5🧀</div>
+        </div>
+        <div class="pin npc" data-id="slick" data-vibe="heat" style="left:24%;top:60%;animation-delay:.6s">
+          <div class="av">🐀<div class="dot"></div></div><div class="tag">Slick · 3.2🧀</div>
+        </div>
+        <div class="pin npc" data-id="ph" data-vibe="threat" style="left:74%;top:39%;animation-delay:.7s">
+          <div class="av">🐀<div class="dot"></div></div><div class="tag">Crumb · contested</div>
+        </div>
+      </div>
+
+      <div class="you">
+        <div class="ring"><div class="inner">🐀</div></div>
+        <div class="me">YOU</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="ttl">Rat Livability Index</div>
+      <div class="bar"></div>
+      <div class="ends"><span>slim pickins</span><span>FEAST</span></div>
+    </div>
+
+    <div class="nearby">
+      <div class="stack"><span>🐀</span><span>🐀</span><span>🐀</span></div>
+      <span><b>3 of the Pack</b> are eating near you</span>
+    </div>
+
+    <div class="hint">tap a rat to scope their block 👆</div>
+  </div>
+
+  <nav class="nav">
+    <button class="active"><span class="ic">🗺️</span>Map</button>
+    <button><span class="ic">🐀</span>Pack</button>
+    <button><div class="center">🍕</div></button>
+    <button><span class="ic">📸</span>Slices</button>
+    <button><span class="ic">🧀</span>Stash</button>
+  </nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet">
+    <div class="grab"></div>
+    <div class="head">
+      <div class="face" id="sFace">🐀</div>
+      <div class="who">
+        <h2 id="sName">—</h2>
+        <div class="loc">📍 <span id="sLoc">—</span></div>
+      </div>
+      <div class="vibe" id="sVibe">—</div>
+    </div>
+
+    <div class="ratebar">
+      <div class="rli"><span class="num" id="sRli">—</span><span class="of">/100 RLI</span></div>
+      <div style="text-align:right">
+        <div class="lbl">pack rating</div>
+        <div class="cheese" id="sCheese">🧀🧀🧀🧀🧀</div>
+      </div>
+    </div>
+
+    <div class="quote">“<span id="sQuote">—</span>”</div>
+
+    <div class="breakdown" id="sFacts"></div>
+
+    <div class="acts">
+      <button class="go">Slide to this block →</button>
+      <button class="wave">Wave 🐾</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const DATA = {
+    prov:{name:"Provolone",face:"🐀",loc:"Bleecker & Mott",vibe:"feast",rli:92,cheese:5,
+      quote:"three slices within a block and the upstairs neighbor keeps calling 311 about me. blessed.",
+      facts:[["🍕","×3 slices · <1 blk","good"],["🚇","grate 40 ft","good"],["📞","311 ×14 (proven turf)","good"],["🦠","B-grade upstairs","warn"]]},
+    mama:{name:"Mama Gnaw",face:"🐀",loc:"Mulberry St",vibe:"feast",rli:95,cheese:5,
+      quote:"the don of this block. the whole pizza pipeline runs through my dumpster. show respect.",
+      facts:[["🍕","×4 · pipeline hub","good"],["🗑️","commercial bins ×6","good"],["📞","311 ×22","good"],["☠️","no exterm. nearby","good"]]},
+    tony:{name:"Tony Two-Tails",face:"🐀",loc:"Canal St Grate",vibe:"feast",rli:88,cheese:4,
+      quote:"i live above a C-grade dumpling spot. the health inspector is my best supplier, honestly.",
+      facts:[["🍜","C-grade · 11 violations","good"],["🚇","grate on-block","good"],["🐈","1 cat · 2 blks","warn"],["📞","311 ×9","good"]]},
+    slick:{name:"Slick",face:"🐀",loc:"Tompkins Sq",vibe:"heat",rli:61,cheese:3,
+      quote:"good crumbs out here but a hawk moved into the park. keep your eyes on the skies, fam.",
+      facts:[["🍕","×2 · ok","warn"],["🦅","hawk nesting","bad"],["🌳","open park · exposed","bad"],["📞","311 ×6","good"]]},
+    ph:{name:"Crumb",face:"🐀",loc:"Delancey & Norfolk",vibe:"threat",rli:38,cheese:2,
+      quote:"pigeons took the east corner. this is contested turf now. don't roll through without muscle.",
+      facts:[["🕊️","pigeon flock · 1 blk","bad"],["☠️","exterminator listed","bad"],["🍕","×1 · slim","warn"],["📞","311 ×3","warn"]]}
+  };
+
+  document.getElementById('chips').addEventListener('click', e=>{
+    const chip=e.target.closest('.chip'); if(!chip)return;
+    const on=chip.dataset.on==="1"?"0":"1";
+    chip.dataset.on=on;
+    document.getElementById('map').dataset[chip.dataset.key]=on;
+  });
+
+  const sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim');
+  document.querySelector('.lyr-pack').addEventListener('click', e=>{
+    const npc=e.target.closest('.npc'); if(!npc)return;
+    const d=DATA[npc.dataset.id]; if(!d)return;
+    sName.textContent=d.name; sLoc.textContent=d.loc; sFace.textContent=d.face;
+    sRli.textContent=d.rli; sQuote.textContent=d.quote;
+    sCheese.textContent="🧀".repeat(d.cheese)+"·".repeat(5-d.cheese);
+    const v=document.getElementById('sVibe');
+    v.className="vibe "+d.vibe;
+    v.textContent={feast:"FEAST",heat:"WATCH",threat:"CONTESTED"}[d.vibe];
+    const wrap=document.getElementById('sFacts'); wrap.innerHTML="";
+    d.facts.forEach(([em,txt,kind])=>{
+      const el=document.createElement('div'); el.className="fact "+kind;
+      el.innerHTML=`<span>${em}</span><span class="v">${txt}</span>`; wrap.appendChild(el);
+    });
+    sheet.classList.add('show'); scrim.classList.add('show');
+  });
+  const close=()=>{sheet.classList.remove('show');scrim.classList.remove('show');};
+  scrim.addEventListener('click',close);
+  document.querySelector('.grab').addEventListener('click',close);
+
+  document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+    if(!b.querySelector('.center'))b.classList.add('active');
+  }));
+</script>
+</body>
+</html>
