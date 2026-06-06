@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scurry · Rat Pack Live Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-parchment:#FBF3E2; --bg-warm:#FFF8EC; --surface:#FFFFFF; --line:#E7D8BA;
+  --ink:#2C2318; --muted:#8C7C64; --cheese:#FFC21F; --cheese-deep:#E89E00;
+  --tomato:#FF5436; --basil:#3FAE4E; --pigeon:#3F8FB2; --danger:#E23B2F;
+  --font-ui:"Figtree",system-ui,sans-serif; --font-mono:"Space Mono",ui-monospace,monospace;
+  --sh-soft:0 1px 3px rgba(44,35,24,.06);
+  --sh-card:0 1px 2px rgba(44,35,24,.05), 0 10px 24px -18px rgba(44,35,24,.4);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font-ui);color:var(--ink);background:var(--bg-parchment);
+  -webkit-font-smoothing:antialiased;line-height:1.5;overflow-x:hidden}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 26px}
+.mono{font-family:var(--font-mono);font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+a{color:inherit}
+
+/* ---- buttons ---- */
+.btn{font-family:var(--font-ui);font-weight:700;font-size:15px;cursor:pointer;border:none;border-radius:999px;
+  padding:13px 22px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+  transition:background .15s ease,color .15s ease,border-color .15s ease,opacity .15s ease}
+.btn-dark{background:var(--ink);color:var(--bg-parchment)}
+.btn-dark:hover{opacity:.88}
+.btn-tomato{background:var(--tomato);color:#fff}
+.btn-tomato:hover{opacity:.9}
+.btn-cheese{background:var(--cheese);color:var(--ink)}
+.btn-cheese:hover{opacity:.9}
+.btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--cheese-deep);color:var(--cheese-deep)}
+
+/* ---- NAV ---- */
+header{position:sticky;top:0;z-index:60;backdrop-filter:saturate(1.1) blur(10px);
+  background:rgba(251,243,226,.82);border-bottom:1px solid rgba(231,216,186,.6)}
+.nav{display:flex;align-items:center;gap:18px;padding:15px 0}
+.brand{display:flex;align-items:center;gap:12px}
+.rat-tile{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  font-size:23px;line-height:1;background:var(--cheese);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+.wordmark{display:flex;flex-direction:column;line-height:1}
+.wordmark b{font-weight:800;font-size:22px;letter-spacing:-.04em}
+.wordmark .kicker{font-size:9px;color:var(--muted);margin-top:3px}
+.nav-spacer{flex:1}
+.nav-links{display:flex;align-items:center;gap:26px}
+.nav-links a{text-decoration:none;font-weight:600;font-size:15px}
+.nav-links a:hover{color:var(--cheese-deep)}
+
+/* ---- HERO ---- */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:72px 0 56px}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:11px;color:var(--cheese-deep);
+  background:var(--surface);border:1px solid var(--line);padding:7px 14px;border-radius:999px}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--basil)}
+.hero h1{font-size:clamp(40px,5.4vw,62px);line-height:1.04;letter-spacing:-.04em;font-weight:800;margin:22px 0 0}
+.hero h1 .hot{color:var(--tomato)}
+.hero .lede{font-size:18px;color:#5b4e3b;margin:20px 0 28px;max-width:34ch}
+.hero-cta{display:flex;gap:13px;flex-wrap:wrap;align-items:center}
+
+/* ---- PHONE ---- */
+.stage{position:relative;display:grid;place-items:center;min-height:560px}
+.phone{position:relative;z-index:1;width:300px;height:610px;border-radius:46px;background:#1b160f;
+  padding:11px;box-shadow:0 30px 60px -30px rgba(44,35,24,.5)}
+.screen{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:#FCF5E6}
+.island{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:88px;height:24px;background:#0c0a07;border-radius:14px;z-index:30}
+
+/* soft map */
+.map{position:absolute;inset:0;background:
+  radial-gradient(120% 90% at 70% 10%, #FFFBF1, #F7EFDD)}
+.blockshape{position:absolute;background:rgba(231,216,186,.45);border-radius:9px}
+.road{position:absolute;background:rgba(255,255,255,.85);border-radius:10px}
+.water{position:absolute;right:-22%;top:-12%;width:60%;height:130%;transform:rotate(20deg);
+  background:linear-gradient(150deg,rgba(63,143,178,.28),rgba(63,143,178,.12));border-radius:40px}
+.park{position:absolute;left:-8%;bottom:6%;width:46%;height:30%;border-radius:46% 54% 50% 60%;
+  background:radial-gradient(120% 120% at 30% 20%,rgba(63,174,78,.32),rgba(63,174,78,.14))}
+.heat{position:absolute;border-radius:50%;filter:blur(16px);mix-blend-mode:multiply;opacity:.45}
+.heat.a{left:28%;top:20%;width:150px;height:140px;background:radial-gradient(circle,rgba(255,84,54,.8),transparent 68%)}
+.heat.b{left:46%;top:44%;width:130px;height:120px;background:radial-gradient(circle,rgba(255,194,31,.9),transparent 68%)}
+.heat.c{left:12%;top:46%;width:100px;height:100px;background:radial-gradient(circle,rgba(255,84,54,.55),transparent 70%)}
+
+/* top app bar */
+.appbar{position:absolute;top:40px;left:14px;right:14px;z-index:25;display:flex;align-items:center;justify-content:space-between}
+.loc{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);
+  padding:8px 13px;border-radius:999px;box-shadow:var(--sh-soft);font-weight:700;font-size:13px}
+.loc svg{color:var(--tomato)}
+.live{display:flex;align-items:center;gap:6px;background:var(--ink);color:#fff;padding:7px 12px;border-radius:999px;font-family:var(--font-mono);font-weight:700;font-size:10px;letter-spacing:.08em}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--basil)}
+
+/* avatar bubbles (Snap-Map style) — static */
+.ava{position:absolute;z-index:20;transform-origin:bottom center}
+.ava .bub{position:relative;width:50px;height:50px;border-radius:50%;background:#fff;display:grid;place-items:center;
+  font-size:25px;border:3px solid #fff}
+.ava.f-cheese .bub{box-shadow:0 0 0 3px var(--cheese),var(--sh-soft)}
+.ava.f-tomato .bub{box-shadow:0 0 0 3px var(--tomato),var(--sh-soft)}
+.ava.f-pigeon .bub{box-shadow:0 0 0 3px var(--pigeon),var(--sh-soft)}
+.ava.f-basil .bub{box-shadow:0 0 0 3px var(--basil),var(--sh-soft)}
+.ava .bub::after{content:"";position:absolute;bottom:-8px;left:50%;width:11px;height:11px;
+  transform:translateX(-50%) rotate(45deg);border-radius:2px;background:#fff}
+.ava .tip{position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-weight:700;
+  font-size:9px;color:#fff;background:var(--ink);padding:2px 6px;border-radius:6px;white-space:nowrap;z-index:3}
+.ava.f-cheese .tip{background:var(--cheese-deep)} .ava.f-tomato .tip{background:var(--tomato)} .ava.f-pigeon .tip{background:var(--pigeon)} .ava.f-basil .tip{background:var(--basil)}
+
+/* bottom sheet */
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:28;background:var(--surface);
+  border-radius:26px 26px 0 0;box-shadow:0 -8px 24px -16px rgba(44,35,24,.3);padding:10px 16px 18px}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
+.sheet h4{margin:0 0 11px;font-size:16px;letter-spacing:-.02em}
+.prow{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid var(--line)}
+.prow .pa{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:var(--bg-warm);flex:0 0 auto}
+.prow.f-cheese .pa{box-shadow:0 0 0 2px var(--cheese)} .prow.f-tomato .pa{box-shadow:0 0 0 2px var(--tomato)} .prow.f-pigeon .pa{box-shadow:0 0 0 2px var(--pigeon)}
+.prow .pn{flex:1}
+.prow .pn b{font-size:13.5px;font-weight:700} .prow .pn small{display:block;color:var(--muted);font-size:11px}
+.prow .pchip{font-family:var(--font-mono);font-weight:700;font-size:9px;letter-spacing:.06em;padding:4px 8px;border-radius:999px}
+.pchip.hot{background:rgba(255,84,54,.14);color:var(--tomato)} .pchip.cool{background:rgba(63,143,178,.14);color:var(--pigeon)}
+.prow .pr{font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--cheese-deep)}
+
+/* ---- CATEGORY + CARDS ---- */
+section.block{padding:64px 0}
+.sec-head{margin-bottom:28px}
+.sec-head .k{color:var(--cheese-deep);font-size:11px}
+.sec-head h2{font-size:clamp(28px,3.6vw,40px);letter-spacing:-.035em;font-weight:800;margin:8px 0 0;max-width:18ch}
+
+.chips{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:14px;cursor:pointer;
+  transition:border-color .15s ease,background .15s ease,color .15s ease;white-space:nowrap}
+.chip:hover{border-color:var(--cheese-deep)}
+.chip.active{background:var(--ink);color:var(--bg-parchment);border-color:var(--ink)}
+
+.cards{display:flex;gap:20px;overflow-x:auto;padding:6px 2px 18px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.cards::-webkit-scrollbar{display:none}
+.card{flex:0 0 270px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--line);
+  border-radius:22px;overflow:hidden;box-shadow:var(--sh-card);transition:border-color .15s ease;cursor:pointer}
+.card:hover{border-color:var(--cheese-deep)}
+.scene{position:relative;height:150px;display:grid;place-items:center;font-size:54px;overflow:hidden}
+.scene.s1{background:radial-gradient(120% 120% at 30% 20%,#FFE08A,#FF7A5C)}
+.scene.s2{background:radial-gradient(120% 120% at 30% 20%,#FFD66B,#E89E00)}
+.scene.s3{background:radial-gradient(120% 120% at 30% 20%,#8FD0E6,#3F8FB2)}
+.scene.s4{background:radial-gradient(120% 120% at 30% 20%,#9BE3A6,#3FAE4E)}
+.scene .rli{position:absolute;top:12px;left:12px;font-family:var(--font-mono);font-weight:700;font-size:12px;
+  background:rgba(255,255,255,.94);color:var(--ink);padding:5px 10px;border-radius:999px;box-shadow:var(--sh-soft)}
+.scene .save{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.94);
+  display:grid;place-items:center;font-size:15px;box-shadow:var(--sh-soft)}
+.card .body{padding:15px 16px 17px}
+.card .body .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card .body h3{margin:0;font-size:16.5px;letter-spacing:-.02em}
+.card .body .cheese{font-size:13px;font-family:var(--font-mono);font-weight:700;color:var(--cheese-deep);white-space:nowrap}
+.card .body .meta{color:var(--muted);font-size:13.5px;margin-top:4px}
+
+/* ---- FEATURES ---- */
+.panels{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:30px 26px;box-shadow:var(--sh-soft)}
+.panel .ic{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:28px;margin-bottom:18px}
+.panel.p1 .ic{background:rgba(255,84,54,.14)} .panel.p2 .ic{background:rgba(255,194,31,.2)} .panel.p3 .ic{background:rgba(63,143,178,.14)}
+.panel h3{margin:0 0 8px;font-size:20px;letter-spacing:-.02em;font-weight:800}
+.panel p{margin:0;color:#5b4e3b;font-size:15px}
+
+/* ---- CTA ---- */
+.cta{margin:24px 0 80px;background:var(--ink);border-radius:34px;padding:60px 54px;
+  color:var(--bg-parchment);display:grid;grid-template-columns:1.4fr auto;align-items:center;gap:34px}
+.cta h2{font-size:clamp(28px,3.4vw,40px);letter-spacing:-.035em;margin:0;font-weight:800;line-height:1.08}
+.cta h2 em{font-style:normal;color:var(--cheese)}
+.cta .acts{display:flex;gap:13px;flex-wrap:wrap}
+
+footer{border-top:1px solid var(--line);padding:36px 0}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.foot .left{display:flex;align-items:center;gap:12px}
+.foot .left .rat-tile{width:38px;height:38px;font-size:20px}
+.foot .left b{font-weight:800;font-size:19px;letter-spacing:-.04em}
+.foot .left .mono{font-size:9px;color:var(--muted)}
+.foot nav{display:flex;gap:22px}
+.foot nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:600}
+.foot nav a:hover{color:var(--cheese-deep)}
+.foot .copy{font-family:var(--font-mono);font-size:9.5px;color:var(--muted);letter-spacing:.08em}
+
+@media (max-width:920px){
+  .hero{grid-template-columns:1fr;gap:30px}
+  .stage{order:-1;min-height:520px}
+  .panels{grid-template-columns:1fr}
+  .nav-links a:not(.btn){display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand">
+      <div class="rat-tile">🐀</div>
+      <div class="wordmark"><b>Scurry</b><span class="kicker mono">Rat Pack · Live Map</span></div>
+    </div>
+    <div class="nav-spacer"></div>
+    <nav class="nav-links">
+      <a href="#trending">Trending</a>
+      <a href="#why">Why Scurry</a>
+      <a href="#" class="btn btn-dark">Get the app</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div>
+      <span class="eyebrow mono"><i class="dot"></i> Live · 4,210 snouts nearby</span>
+      <h1>Find your pack.<br>Run the block <span class="hot">tonight</span>.</h1>
+      <p class="lede">See every Rat Pack move in real time, and where the crumbs are hottest.</p>
+      <div class="hero-cta">
+        <a href="#" class="btn btn-tomato">Open the live map</a>
+        <a href="#why" class="btn btn-ghost">See how it works</a>
+      </div>
+    </div>
+
+    <!-- PHONE -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="island"></div>
+
+          <!-- map -->
+          <div class="map">
+            <div class="water"></div>
+            <div class="park"></div>
+            <div class="road" style="left:0;right:0;top:42%;height:7px;transform:rotate(-3deg)"></div>
+            <div class="road" style="top:0;bottom:0;left:58%;width:7px;transform:rotate(2deg)"></div>
+            <div class="blockshape" style="left:14%;top:18%;width:50px;height:42px"></div>
+            <div class="blockshape" style="left:40%;top:24%;width:44px;height:54px"></div>
+            <div class="blockshape" style="left:18%;top:62%;width:58px;height:40px"></div>
+            <div class="blockshape" style="left:62%;top:58%;width:48px;height:46px"></div>
+            <div class="heat a"></div><div class="heat b"></div><div class="heat c"></div>
+          </div>
+
+          <!-- app bar -->
+          <div class="appbar">
+            <div class="loc"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> Lower East Side</div>
+            <div class="live"><i></i> LIVE</div>
+          </div>
+
+          <!-- avatar bubbles -->
+          <div class="ava f-tomato" style="left:30%;top:24%"><span class="tip">RLI 94</span><div class="bub">🐀</div></div>
+          <div class="ava f-cheese" style="left:50%;top:36%"><span class="tip">RLI 88</span><div class="bub">🐀</div></div>
+          <div class="ava f-pigeon" style="left:64%;top:26%"><span class="tip">SYN</span><div class="bub">🐦</div></div>
+          <div class="ava f-basil" style="left:22%;top:50%"><span class="tip">RLI 62</span><div class="bub">🐁</div></div>
+
+          <!-- bottom sheet -->
+          <div class="sheet">
+            <div class="grab"></div>
+            <h4>Hot near you</h4>
+            <div class="prow f-tomato"><div class="pa">🐀</div><div class="pn"><b>Mott Street Crew</b><small>Mott &amp; Grand · 🧀 5.0</small></div><div class="pchip hot">RLI 94</div></div>
+            <div class="prow f-cheese"><div class="pa">🐀</div><div class="pn"><b>Slice Squad</b><small>Delancey · 🧀 4.6</small></div><div class="pr">RLI 88</div></div>
+            <div class="prow f-pigeon"><div class="pa">🐦</div><div class="pn"><b>Pigeon Syndicate</b><small>Essex Stn · transit</small></div><div class="pchip cool">RIVAL</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRENDING -->
+  <section class="block" id="trending">
+    <div class="sec-head">
+      <div class="k mono">Trending tonight</div>
+      <h2>The blocks everyone's sniffing toward.</h2>
+    </div>
+    <div class="chips">
+      <div class="chip active">🔥 Hottest now</div>
+      <div class="chip">🧀 Freshest crumbs</div>
+      <div class="chip">🐦 Syndicate turf</div>
+      <div class="chip">🌳 Calm parks</div>
+      <div class="chip">🚇 Transit lines</div>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="scene s1">🍕<span class="rli">RLI 94</span><span class="save">♡</span></div>
+        <div class="body"><div class="top"><h3>Mott &amp; Grand</h3><span class="cheese">🧀 5.0</span></div>
+          <div class="meta">Little Italy · 3 packs holding</div></div>
+      </div>
+      <div class="card">
+        <div class="scene s2">🧀<span class="rli">RLI 88</span><span class="save">♡</span></div>
+        <div class="body"><div class="top"><h3>Bedford Ave</h3><span class="cheese">🧀 4.6</span></div>
+          <div class="meta">Williamsburg · L-train crew</div></div>
+      </div>
+      <div class="card">
+        <div class="scene s3">🐦<span class="rli">RLI 85</span><span class="save">♡</span></div>
+        <div class="body"><div class="top"><h3>Pier 17</h3><span class="cheese">🧀 4.4</span></div>
+          <div class="meta">Waterfront · contested</div></div>
+      </div>
+      <div class="card">
+        <div class="scene s4">🌳<span class="rli">RLI 62</span><span class="save">♡</span></div>
+        <div class="body"><div class="top"><h3>Crumb Park</h3><span class="cheese">🧀 4.1</span></div>
+          <div class="meta">Quiet feeders · family friendly</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section class="block" id="why">
+    <div class="sec-head">
+      <div class="k mono">Why packs love it</div>
+      <h2>Everything on the block, in one tap.</h2>
+    </div>
+    <div class="panels">
+      <div class="panel p1">
+        <div class="ic">🔥</div>
+        <h3>Live RLI heat</h3>
+        <p>See where the night is actually happening, at a glance.</p>
+      </div>
+      <div class="panel p2">
+        <div class="ic">🧀</div>
+        <h3>Crumb ratings</h3>
+        <p>Five-cheese reviews from packs on the ground.</p>
+      </div>
+      <div class="panel p3">
+        <div class="ic">🐦</div>
+        <h3>Track the Syndicate</h3>
+        <p>Know where the Pigeon Syndicate roams.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Your block is moving.<br><em>Don't miss the scurry.</em></h2>
+    <div class="acts">
+      <a href="#" class="btn btn-cheese">Open the live map</a>
+      <a href="#" class="btn btn-ghost" style="background:transparent;color:var(--bg-parchment);border-color:rgba(251,243,226,.3)">Join a pack</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="left">
+      <div class="rat-tile">🐀</div>
+      <div><b>Scurry</b><div class="mono">Rat Pack · Live Map</div></div>
+    </div>
+    <nav><a href="#trending">Trending</a><a href="#why">Why Scurry</a><a href="#">Factions</a><a href="#">Privacy</a></nav>
+    <div class="copy">© 2026 · Crumbs tracked nightly</div>
+  </div>
+</footer>
+
+</body>
+</html>
