@@ -75,7 +75,7 @@
 
   /* ---------- map ---------- */
   #map{position:absolute;inset:0;z-index:10;background:var(--ground)}
-  .maplibregl-canvas{filter:sepia(.18) saturate(1.05) brightness(1.02) hue-rotate(-6deg)}
+  .maplibregl-canvas{filter:sepia(.12) saturate(1.12) brightness(1.02) hue-rotate(-6deg)}
   .maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(255,255,255,.55)!important}
   .maplibregl-ctrl-bottom-right{bottom:170px!important}
 
@@ -323,9 +323,11 @@
   <div class="fab recenter" id="recenter" title="Recenter">🎯</div>
   <div class="layers-panel" id="layersPanel">
     <div class="lp-ttl">Map layers</div>
-    <div class="lp-row" data-key="heat" data-on="1"><span class="em">🌡️</span>RLI Heat<span class="sw"></span></div>
+    <div class="lp-row" data-key="heat" data-on="1"><span class="em">🌡️</span>Rat Heat<span class="sw"></span></div>
     <div class="lp-legend on" id="lpLegend"><div class="bar"></div><div class="ends"><span>slim pickins</span><span>FEAST</span></div></div>
-    <div class="lp-row" data-key="transit" data-on="0"><span class="em">🚇</span>Transit<span class="sw"></span></div>
+    <div class="lp-row" data-key="warehouse" data-on="0"><span class="em">📦</span>Warehouses<span class="sw"></span></div>
+    <div class="lp-row" data-key="dump" data-on="0"><span class="em">🗑️</span>Dumps & trash<span class="sw"></span></div>
+    <div class="lp-row" data-key="ferry" data-on="0"><span class="em">⛴️</span>Ferry<span class="sw"></span></div>
   </div>
 
   <!-- single sliding tray -->
@@ -374,40 +376,32 @@
    ============================================================ */
 
 const PACK = {
-  mama:{name:"Mama Gnaw",face:"🐀",loc:"Mulberry St",vibe:"feast",rli:95,cheese:5,lngLat:[-73.99720,40.71960],
+  mama:{name:"Mama Gnaw",face:"🐀",photo:"assets/Sage.jpg",loc:"Mulberry St",vibe:"feast",rli:95,cheese:5,lngLat:[-73.99720,40.71960],
     facts:[["🍕","×4 · pipeline hub","good"],["🗑️","commercial bins ×6","good"],["☠️","no exterm. nearby","good"]]},
-  prov:{name:"Provolone",face:"🐀",loc:"Bleecker & Mott",vibe:"feast",rli:92,cheese:5,lngLat:[-73.99465,40.72575],
+  prov:{name:"Provolone",face:"🐀",photo:"assets/Anton.jpg",loc:"Bleecker & Mott",vibe:"feast",rli:92,cheese:5,lngLat:[-73.99465,40.72575],
     facts:[["🍕","×3 slices · <1 blk","good"],["🚇","grate 40 ft","good"],["🦠","B-grade upstairs","warn"]]},
-  tony:{name:"Tony Two-Tails",face:"🐀",loc:"Canal St Grate",vibe:"feast",rli:88,cheese:4,lngLat:[-73.99900,40.71845],
+  tony:{name:"Tony Two-Tails",face:"🐀",photo:"assets/Mike.jpg",loc:"Canal St Grate",vibe:"feast",rli:88,cheese:4,lngLat:[-73.99900,40.71845],
     facts:[["🍜","C-grade · 11 violations","good"],["🚇","grate on-block","good"],["🐈","1 cat · 2 blks","warn"]]},
   slick:{name:"Slick",face:"🐀",loc:"Tompkins Sq",vibe:"heat",rli:61,cheese:3,lngLat:[-73.98160,40.72645],
     facts:[["🍕","×2 · ok","warn"],["🦅","hawk nesting","bad"],["🌳","open park · exposed","bad"]]},
   crumb:{name:"Crumb",face:"🐀",loc:"Delancey & Norfolk",vibe:"threat",rli:38,cheese:2,lngLat:[-73.98700,40.71840],
     facts:[["🕊️","pigeon flock · 1 blk","bad"],["☠️","exterminator listed","bad"],["🍕","×1 · slim","warn"]]}
 };
-const FEAST = [
-  {emoji:"🏪",cls:"hq",   lngLat:[-73.99520,40.72490],title:"The Bodega",sub:"Rat HQ · open 24/7",stat:"the war room"},
-  {emoji:"🍕",cls:"pizza",lngLat:[-73.99350,40.72660],title:"Corner Slice",sub:"Pizza · open now",stat:"+14 · 2 rats"},
-  {emoji:"🍕",cls:"pizza",lngLat:[-73.99640,40.72060],title:"Mott St Pizza",sub:"Pizza · pipeline hub",stat:"+18 · 4 rats"},
-  {emoji:"🍕",cls:"pizza",lngLat:[-73.99860,40.71900],title:"Canal Slice Co.",sub:"Pizza · open late",stat:"+11 · 1 rat"},
-  {emoji:"🍕",cls:"pizza",lngLat:[-73.98270,40.72560],title:"Avenue A Pie",sub:"Pizza · open now",stat:"+9 · slim crowd"},
-  {emoji:"🥯",cls:"",     lngLat:[-73.99060,40.72280],title:"Bagel Cart",sub:"Crumbs · morning only",stat:"+6 · early bird"},
-  {emoji:"🗑️",cls:"",    lngLat:[-73.99220,40.72380],title:"Dumpster Row",sub:"Commercial bins ×3",stat:"+8 · reliable"},
-  {emoji:"🗑️",cls:"",    lngLat:[-73.99780,40.72540],title:"Back-Alley Bins",sub:"Restaurant waste",stat:"+10 · nightly"}
-];
-const TRANSIT = [
-  {emoji:"🚇",lngLat:[-73.99400,40.72530],title:"Bleecker St Grate",sub:"Subway grate",stat:"warm · fast exit"},
-  {emoji:"🚇",lngLat:[-73.99880,40.71950],title:"Canal St Station",sub:"Subway grate",stat:"crumb-rich"},
-  {emoji:"🚇",lngLat:[-73.98300,40.72400],title:"2nd Ave Grate",sub:"Subway grate",stat:"low heat route"}
-];
-const THREAT = [
-  {emoji:"☠️",cls:"threat",       lngLat:[-73.98600,40.71760],title:"Exterminator",sub:"Listed this week",stat:"−40 · avoid"},
-  {emoji:"🐈",cls:"threat",       lngLat:[-73.99100,40.71680],title:"Stray Cat",sub:"Hunting · 2 blocks",stat:"−22 · stay grated"},
-  {emoji:"🕊️",cls:"threat pigeon",lngLat:[-73.98800,40.72500],title:"Pigeon Flock",sub:"Contesting turf",stat:"−18 · birds circling"},
-  {emoji:"🕊️",cls:"threat pigeon",lngLat:[-73.98950,40.72250],title:"Pigeon Scouts",sub:"Circling",stat:"−12 · watching"}
-];
+/* Real place layers (loaded from data/places.geojson, derived from the
+   Apify Google-Maps scrape + ferry docks). g = layer group. */
+const GROUPS = {
+  pizza:       {emoji:"🍕", color:"#ff5436", label:"Pizza"},
+  bodega:      {emoji:"🏪", color:"#e89e00", label:"Bodega"},
+  exterminator:{emoji:"☠️", color:"#e23b2f", label:"Exterminator"},
+  warehouse:   {emoji:"📦", color:"#8a6d3b", label:"Warehouse"},
+  dump:        {emoji:"🗑️", color:"#6f7d52", label:"Dump / trash"},
+  ferry:       {emoji:"⛴️", color:"#3f8fb2", label:"Ferry terminal"}
+};
+/* which groups each toggle controls */
+const TOGGLE_GROUPS = {feast:["pizza","bodega"], danger:["exterminator"], warehouse:["warehouse"], dump:["dump"], ferry:["ferry"]};
+const HEAT_GROUPS = ["pizza","bodega","dump"]; // food density → rat livability proxy
 const VIBE={feast:"FEAST",heat:"WATCH",threat:"CONTESTED"};
-const HOME={center:[-73.9905,40.7225],zoom:14.2};
+const HOME={center:[-73.9905,40.7225],zoom:13.4};
 const YOU=[-73.99150,40.72180];
 
 const map=new maplibregl.Map({container:'map',
@@ -417,6 +411,8 @@ const map=new maplibregl.Map({container:'map',
 
 function el(cls,html){const d=document.createElement('div');d.className=cls;if(html!=null)d.innerHTML=html;return d;}
 function addMarker(group,node,lngLat){node.classList.add(group);return new maplibregl.Marker({element:node}).setLngLat(lngLat).addTo(map);}
+function avStyle(d){return d&&d.photo?`background-image:url('${d.photo}');background-size:cover;background-position:center`:'';}
+function avGlyph(d){return d&&d.photo?'':'🐀';}
 let toastT=null;
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
 
@@ -428,7 +424,7 @@ let curEl=null,curView='list',animating=false;
 
 function listRow(d){
   const row=el('row',
-    `<div class="ravi">🐀</div>
+    `<div class="ravi" style="${avStyle(d)}">${avGlyph(d)}</div>
      <div class="rmid"><div class="rn">${d.name} <span class="vchip ${d.vibe}">${VIBE[d.vibe]}</span></div>
        <div class="rl">📍 ${d.loc} · ${"🧀".repeat(d.cheese)}</div></div>
      <div class="rright"><div class="rli">${d.rli}</div><div class="rcap">RLI</div></div>`);
@@ -445,7 +441,7 @@ function buildView(name,data){
     const facts=data.facts.map(([em,t,k])=>`<div class="fact ${k}"><span>${em}</span><span class="v">${t}</span></div>`).join('');
     v.innerHTML=`
       <div class="detail-head">
-        <div class="face">🐀</div>
+        <div class="face" style="${avStyle(data)}">${avGlyph(data)}</div>
         <div class="who"><h2>${data.name}</h2><div class="loc">📍 ${data.loc}</div></div>
         <div class="vibe ${data.vibe}">${VIBE[data.vibe]}</div>
       </div>
@@ -521,33 +517,62 @@ grip.addEventListener('pointerup',()=>{
 
 /* ---------------- MAP load: build layers + markers ---------------- */
 map.on('load',()=>{
-  const heatPts={type:'FeatureCollection',features:[
-    ...Object.values(PACK).map(p=>({type:'Feature',properties:{w:p.rli/100},geometry:{type:'Point',coordinates:p.lngLat}})),
-    ...FEAST.map(f=>({type:'Feature',properties:{w:0.7},geometry:{type:'Point',coordinates:f.lngLat}}))
-  ]};
-  map.addSource('rli',{type:'geojson',data:heatPts});
-  map.addLayer({id:'rli-heat',type:'heatmap',source:'rli',paint:{
-    'heatmap-weight':['get','w'],'heatmap-intensity':1.1,'heatmap-radius':46,'heatmap-opacity':0.7,
-    'heatmap-color':['interpolate',['linear'],['heatmap-density'],
-      0,'rgba(255,194,31,0)',0.3,'rgba(255,194,31,0.45)',0.6,'rgba(255,138,40,0.6)',1,'rgba(255,84,54,0.75)']}});
-
-  FEAST.forEach(p=>{const n=el('mk poi '+p.cls,p.emoji);n.addEventListener('click',()=>openTrayTo('place',p));addMarker('grp-feast',n,p.lngLat);});
-  TRANSIT.forEach(p=>{const n=el('mk poi transit',p.emoji);n.addEventListener('click',()=>openTrayTo('place',p));addMarker('grp-transit',n,p.lngLat);});
-  THREAT.forEach(p=>{const n=el('mk '+p.cls,p.emoji);n.addEventListener('click',()=>openTrayTo('place',p));addMarker('grp-threat',n,p.lngLat);});
-  Object.values(PACK).forEach(d=>{const n=el('mk npc',`<div class="av">🐀<div class="dot"></div></div>`);n.dataset.vibe=d.vibe;n.addEventListener('click',()=>openTrayTo('rat',d));addMarker('grp-pack',n,d.lngLat);});
+  // Pack avatars + YOU stay as HTML markers (photos / styled rings)
+  Object.values(PACK).forEach(d=>{const n=el('mk npc',`<div class="av" style="${avStyle(d)}">${avGlyph(d)}<div class="dot"></div></div>`);n.dataset.vibe=d.vibe;n.addEventListener('click',()=>openTrayTo('rat',d));addMarker('grp-pack',n,d.lngLat);});
   addMarker('grp-me',el('mk me-mk',`<div class="ring"><div class="inner">🐀</div></div><div class="me">YOU</div>`),YOU);
-  applyLayers();
+
+  // Real places pulled from the data directory (881 points, all 5 boroughs)
+  fetch('data/places.geojson').then(r=>r.json()).then(geo=>{
+    map.addSource('places',{type:'geojson',data:geo});
+
+    // Rat-heat: density of food sources (pizza + bodegas + dumps)
+    map.addLayer({id:'rli-heat',type:'heatmap',source:'places',
+      filter:['in',['get','g'],['literal',HEAT_GROUPS]],
+      paint:{'heatmap-weight':0.8,
+        'heatmap-intensity':['interpolate',['linear'],['zoom'],11,1,16,2.2],
+        'heatmap-radius':['interpolate',['linear'],['zoom'],11,14,16,34],
+        'heatmap-opacity':0.6,
+        'heatmap-color':['interpolate',['linear'],['heatmap-density'],
+          0,'rgba(255,194,31,0)',0.3,'rgba(255,194,31,0.45)',0.6,'rgba(255,138,40,0.6)',1,'rgba(255,84,54,0.78)']}});
+
+    // Category dots (colored, clean — like a real map)
+    map.addLayer({id:'places-dots',type:'circle',source:'places',
+      paint:{'circle-radius':['interpolate',['linear'],['zoom'],11,3,13,4.5,14,6,16,8.5,18,12],
+        'circle-color':['match',['get','g'],
+          'pizza','#ff5436','bodega','#e89e00','exterminator','#e23b2f',
+          'warehouse','#8a6d3b','dump','#6f7d52','ferry','#3f8fb2','#999'],
+        'circle-stroke-width':1.3,'circle-stroke-color':'#fff','circle-opacity':0.9}});
+
+    map.on('click','places-dots',e=>{
+      const f=e.features[0]; if(!f)return; const p=f.properties; const g=GROUPS[p.g]||{emoji:'📍'};
+      openTrayTo('place',{emoji:g.emoji,title:p.name,
+        sub:(p.cat||'')+(p.addr?' · '+p.addr:''),
+        stat:(p.score?('★ '+p.score):(p.cat||'')),
+        lngLat:f.geometry.coordinates.slice()});
+    });
+    map.on('mouseenter','places-dots',()=>map.getCanvas().style.cursor='pointer');
+    map.on('mouseleave','places-dots',()=>map.getCanvas().style.cursor='');
+
+    // Apply the visibility filter once the source has finished parsing, else
+    // the freshly-added layers can stay un-rendered until a re-evaluation.
+    if(map.isSourceLoaded('places')) applyLayers();
+    else { const h=e=>{ if(e.sourceId==='places' && map.isSourceLoaded('places')){ map.off('sourcedata',h); applyLayers(); map.triggerRepaint(); } }; map.on('sourcedata',h); }
+  }).catch(err=>console.error('places.geojson load failed',err));
 });
 
 /* ---------------- layer toggles ---------------- */
 const mapEl=document.getElementById('map');
 const lpLegend=document.getElementById('lpLegend');
 function applyLayers(){
+  let enabled=[];
   document.querySelectorAll('[data-key]').forEach(t=>{
     const on=t.dataset.on==="1",key=t.dataset.key;
-    if(key==='heat'){lpLegend.classList.toggle('on',on);if(map.getLayer('rli-heat'))map.setLayoutProperty('rli-heat','visibility',on?'visible':'none');}
-    else{mapEl.classList.toggle('h-'+key,!on);}
+    if(key==='pack'){mapEl.classList.toggle('h-pack',!on);}
+    else if(key==='heat'){lpLegend.classList.toggle('on',on);if(map.getLayer('rli-heat'))map.setLayoutProperty('rli-heat','visibility',on?'visible':'none');}
+    else if(TOGGLE_GROUPS[key]){if(on)enabled=enabled.concat(TOGGLE_GROUPS[key]);}
   });
+  if(map.getLayer('places-dots'))
+    map.setFilter('places-dots', enabled.length?['in',['get','g'],['literal',enabled]]:['==',['get','g'],'__none__']);
 }
 function bindToggle(sel){document.querySelector(sel).addEventListener('click',e=>{const t=e.target.closest('[data-key]');if(!t)return;t.dataset.on=t.dataset.on==="1"?"0":"1";applyLayers();});}
 bindToggle('#chips');bindToggle('#layersPanel');
@@ -579,7 +604,7 @@ const SCREENS={
     let h='';
     Object.entries(PACK).forEach(([id,d])=>{
       h+=`<div class="card pcard" data-vibe="${d.vibe}">
-        <div class="pav">🐀<span class="od"></span></div>
+        <div class="pav" style="${avStyle(d)}">${avGlyph(d)}<span class="od"></span></div>
         <div class="pm"><div class="pn">${d.name}</div><div class="pl">📍 ${d.loc} · ${d.rli} RLI · ${"🧀".repeat(d.cheese)}</div></div>
         <button class="locate" data-locate="${id}">Locate</button></div>`;
     });
